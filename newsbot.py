@@ -2,7 +2,7 @@ import json
 import datetime
 from aiogram.utils.markdown import hbold, hlink, hcode, hunderline
 from aiogram import Dispatcher, executor, Bot, types
-from news import check_news_update
+from news2 import check_news_update
 from aiogram.dispatcher.filters import Text
 import asyncio
 
@@ -22,17 +22,7 @@ async def start(message: types.Message):
 
     await message.answer('Выберите раздел', reply_markup=keyboard)
 
-async def news_every_30_min():
-    while True:
-        fresh_news = check_news_update()
-        if len(fresh_news) >= 1:
-            for k, v in sorted(fresh_news.items()):
-                news = f'<b>{datetime.datetime.fromtimestamp(v["time"])}</b>\n' \
-                       f' {hlink(v["name"], v["url"])}'
 
-                await bot.send_message(user_id, news, disable_notification=True)
-
-        await asyncio.sleep(1800)
 
 
 
@@ -78,11 +68,31 @@ async def get_fresh_news(message: types.Message):
     else:
         await message.answer('Свежих новостей пока нет')
 
+async def news_every_30_min():
+    while True:
+        fresh_news = check_news_update()
+        if len(fresh_news) >= 1:
+            for k, v in sorted(fresh_news.items()):
+                news = f'<b>{datetime.datetime.fromtimestamp(v["time"])}</b>\n' \
+                       f' {hlink(v["name"], v["url"])}'
 
-if __name__ == '__main__':
-    asyncio.run(news_every_30_min())
-    executor.start_polling(dp)
+                await bot.send_message(user_id, news, disable_notification=True)
+        else:
+            await bot.send_message(user_id,'пока нет свежих новостей', disable_notification=True)
+        await asyncio.sleep(1800)
+
+# if __name__ == '__main__':
+#     executor.start_polling(dp)
+#     asyncio.run(news_every_30_min())
+
 # if __name__ == '__main__':
 #     loop= asyncio.get_event_loop()
 #     loop.create_task(news_every_30_min())
 #     executor.start_polling(dp)
+
+async def main():
+    task = asyncio.create_task(news_every_30_min())
+    await dp.start_polling(dp)
+
+if __name__ == '__main__':
+    asyncio.run(main())
